@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>국가고객만족도(NCSI)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="image" href="/background.PNG">
+    <style>
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            background: url('/background.PNG');
+            background-size: cover;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 배경 오버레이 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(135deg, rgba(0, 17, 34, 0.8) 0%, rgba(0, 34, 68, 0.6) 50%, rgba(0, 51, 102, 0.8) 100%),
+                radial-gradient(circle at 20% 20%, rgba(244, 115, 33, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(52, 152, 219, 0.1) 0%, transparent 50%);
+            z-index: -2;
+        }
+        /* 추가 배경 패턴 */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 25% 75%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 75% 25%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .logo-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            justify-content: center;
+            margin-top: 30px;
+            position: relative;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            width: 140px;
+            height: 120px;
+            margin-left: 40px;
+            margin-right: 40px;
+            flex-shrink: 0;
+        }
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .title-container {
+            text-align: left;
+        }
+        .title {
+            color: white;
+            font-size: 32px;
+            margin: 0;
+            text-align: left;
+            line-height: 1.3;
+        }
+        .subtitle {
+            color: white;
+            font-size: 20px;
+            margin: 10px 0;
+            font-weight: normal;
+            text-align: left;
+        }
+
+        .cx-intelligence {
+            color: #f47321;
+            font-size: 42px;
+            margin: 80px 0 40px 0;
+            text-align: center;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .cx-intelligence::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #f47321, transparent);
+            border-radius: 2px;
+        }
+
+        /* 메인 컨텐츠 컨테이너 */
+        .main-content {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            justify-content: center;
+            margin: 0 auto;
+            max-width: 900px;
+        }
+
+        /* 로그인 컨테이너와 공개 컨테이너 기본 스타일 */
+        .login-container, .public-container {
+            background: rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(8px);
+            border-radius: 15px;
+            padding: 40px;
+            width: 380px;
+            height: 500px; 
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .login-container::before, .public-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #f47321, #ff6b6b, #4ecdc4, #45b7d1);
+            background-size: 300% 100%;
+            animation: gradientMove 4s ease-in-out infinite;
+        }
+        
+        @keyframes gradientMove {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .login-title, .public-title {
+            font-size: 24px;
+            color: white;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 700;
+            position: relative;
+        }
+        
+        .login-title::after, .public-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, #f47321, #ff6b6b);
+            border-radius: 2px;
+        }
+        
+        .login-form {
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 22px;
+            position: relative;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 16px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 400;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(0, 0, 0, 0.1) !important;
+            backdrop-filter: blur(5px);
+            color: white !important;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+        
+        .form-group input:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 30px #000000 inset !important;
+            -webkit-text-fill-color: white !important;
+            background-clip: content-box !important;
+            background-color: #000000 !important;
+        }
+        
+        .form-group input:-webkit-autofill:hover,
+        .form-group input:-webkit-autofill:focus,
+        .form-group input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px #000000 inset !important;
+            -webkit-text-fill-color: white !important;
+            background-color: #000000 !important;
+        }
+        
+        /* 크롬 자동완성 드롭다운 스타일 강제 적용 */
+        .form-group input:-webkit-autofill,
+        .form-group input:-webkit-autofill:hover,
+        .form-group input:-webkit-autofill:focus,
+        .form-group input:-webkit-autofill:active {
+            transition: background-color 5000s ease-in-out 0s !important;
+            -webkit-text-fill-color: white !important;
+            background-color: #000000 !important;
+        }
+        
+        /* 크롬 자동완성 드롭다운 자체 스타일 강제 적용 */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px #000000 inset !important;
+            -webkit-text-fill-color: white !important;
+            background-color: #000000 !important;
+        }
+        
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .form-group input:focus {
+            border-color: #f47321;
+            outline: none;
+            box-shadow: 
+                inset 0 1px 3px rgba(0, 0, 0, 0.1),
+                0 0 0 2px rgba(244, 115, 33, 0.3);
+            background: rgba(0, 0, 0, 0.15);
+        }
+        
+        .form-group input:hover {
+            border-color: rgba(244, 115, 33, 0.4);
+            background: rgba(0, 0, 0, 0.12);
+        }
+        
+        /* 로그인 버튼 */
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #f47321 0%, #e06518 100%);
+            color: white;
+            margin-top: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(244, 115, 33, 0.3);
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(244, 115, 33, 0.4);
+            background: linear-gradient(135deg, #ff6b35 0%, #f47321 100%);
+        }
+
+        .login-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
+        }
+
+        /* 공개 리포트 컨테이너 특별 스타일 */
+        .public-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 220px; /* 로그인 폼과 동일한 높이 */
+        }
+
+        .public-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #f47321, #ff6b6b);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            transform:  translateY(50px);
+            box-shadow: 0 10px 25px rgba(244, 115, 33, 0.3);
+            font-size: 36px;
+        }
+
+        .public-btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #f47321 0%, #e06518 100%);
+            color: white;
+            margin-top: 20px;
+            
+            transform: translateY(95px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 12px rgba(244, 115, 33, 0.3);
+        }
+
+        .public-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+            transition: left 0.6s;
+            /* 버튼과 동일한 위치에 배치 */
+            transform: translateY(103px);
+        }
+
+        .public-btn:hover {
+            transform: translateY(92px);
+            box-shadow: 0 15px 35px rgba(244, 115, 33, 0.4);
+            background: linear-gradient(135deg, #ff6b35 0%, #f47321 100%);
+            
+        }
+
+        .public-btn:active {
+            transform: translateY(92px);
+        }
+
+        .public-btn:hover::before {
+            left: 100%;
+        }
+        
+        .login-description{
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            margin-top: 25px;
+            line-height: 1.6;
+            font-weight: 400;
+            padding: 20px;
+            transform: translateY(17px);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+
+        .public-description {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            margin-top: 102px;
+            line-height: 1.6;
+            font-weight: 400;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .footer {
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            margin-top: 100px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .footer .contact-info {
+            margin-bottom: 10px;
+            color: #a0a0a0;
+        }
+        .footer .address {
+            color: #a0a0a0;
+            margin-bottom: 10px;
+        }
+        .footer .copyright {
+            color: #a0a0a0;
+        }
+        .footer .logo {
+            margin: 20px auto;
+            width: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .footer .logo img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+                gap: 30px;
+                max-width: 420px;
+            }
+
+            .login-container, .public-container {
+                width: 100%;
+                max-width: 420px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-section">
+            <div class="logo">
+                <a href="https://www.ncsi.or.kr/" target="_blank">
+                    <img src="/NCSI.PNG" alt="NCSI Logo">
+                </a>
+            </div>
+            <div class="title-container">
+                <h1 class="title">국가고객만족도(National Customer Satisfaction Index)</h1>
+                <h2 class="subtitle">1998년에 도입된 글로벌 표준 지수</h2>
+            </div>
+        </div>
+
+        <h1 class="cx-intelligence">CX Intelligence</h1>
+        
+        <!-- 메인 컨텐츠 영역 -->
+        <div class="main-content">
+            <!-- 로그인 컨테이너 (왼쪽) -->
+            <div class="login-container">
+                <h2 class="login-title">로그인</h2>
+                
+                <!-- 일반 로그인 폼 -->
+                <form class="login-form" onsubmit="return handleSimpleLogin(event)">
+                    <div class="form-group">
+                        <label for="id">아이디</label>
+                        <input type="text" id="id" name="id" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">비밀번호</label>
+                        <input type="password" id="password" name="password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="login-btn" id="loginBtn">로그인</button>
+                </form>
+                
+                <p class="login-description">
+                    NCSI 리포트 시스템은 사전 등록된 사용자만 이용할 수 있습니다.<br>
+                    등록되지 않은 경우 관리자에게 문의해 주세요.
+                </p>
+            </div>
+
+            <!-- 공개용 리포트 컨테이너 (오른쪽) -->
+            <div class="public-container">
+                <h2 class="public-title">공개 리포트</h2>
+                
+                <div class="public-content">
+                    <div class="public-icon">📊</div>
+                    
+                    <button type="button" class="public-btn" onclick="goToPublicReport()">
+                        공개용 리포트로 이동하기
+                    </button>
+                </div>
+                
+                <p class="public-description">
+                    회원가입 없이 누구나 이용할 수 있는<br>
+                    공개 NCSI 리포트를 확인해보세요.
+                </p>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="contact-info">
+                상담문의 - CX컨설팅1센터 (02-398-4352 / jpkang@kpc.or.kr) | CX컨설팅2센터 (02-398-4367 / dhlim@kpc.or.kr)
+            </div>
+            <div class="address">
+                서울시 종로구 새문안로 5가길 32(적선동) 생산성빌딩 사업자등록번호 102-82-05476
+            </div>
+            <div class="copyright">
+                COPYRIGHT 2024 KPC ALL RIGHTS RESERVED.
+            </div>
+            <div class="logo">
+                <img src="/KPC-Photoroom.png" alt="KPC 한국생산성본부">
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 간단한 로그인 폼 처리
+        async function handleSimpleLogin(event) {
+            event.preventDefault();
+            const id = document.getElementById('id').value;
+            const password = document.getElementById('password').value;
+
+            if (!id || !password) {
+                alert('아이디와 비밀번호를 입력해주세요.');
+                return false;
+            }
+
+            try {
+                const res = await fetch('/api/user/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, password })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    const link = data.loginLink;
+                    if (link) {
+                        // URL을 깔끔하게 만들기 위해 세션스토리지에 링크 저장
+                        sessionStorage.setItem('userReportLink', link);
+                        window.location.href = '/private-report';
+                    } else {
+                        alert('로그인 성공했지만 링크가 없습니다. 관리자에게 문의하세요.');
+                    }
+                } else {
+                    alert('아이디/비밀번호를 확인해주세요.');
+                }
+            } catch (e) {
+                alert('로그인 요청 중 오류가 발생했습니다.');
+            }
+            return false;
+        }
+
+        // 공개 리포트 별도 페이지로 이동
+        function goToPublicReport() {
+            window.location.href = '/public-report';
+        }
+    </script>
+</body>
+</html>

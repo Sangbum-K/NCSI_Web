@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>개인 리포트 - NCSI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #000000;
+            font-family: 'Noto Sans KR', sans-serif;
+            overflow: hidden;
+        }
+        .wrap {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+        }
+        .content {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            background: #000000;
+        }
+        .embed {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        .embed iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+            background: #000000;
+        }
+    </style>
+    <link rel="icon" href="/NCSI.PNG">
+    <script>
+      window.addEventListener('load', function() {
+        // 세션스토리지에서 사용자 링크 가져오기
+        var link = sessionStorage.getItem('userReportLink');
+        var frame = document.getElementById('reportFrame');
+        
+        if (link && frame) {
+          try { 
+            frame.src = link; 
+          } catch(e) { 
+            frame.src = link; 
+          }
+        } else {
+          // 링크가 없는 경우
+          document.querySelector('.content').innerHTML = `
+            <div style="text-align: center; color: #e5e7eb; padding: 40px;">
+              <h2>⚠️ 리포트를 불러올 수 없습니다</h2>
+              <p>사용자 정보를 확인할 수 없습니다.</p>
+              <a href="/" style="color: #f97316; text-decoration: none; font-weight: 700;">홈으로 돌아가기</a>
+            </div>
+          `;
+        }
+      });
+    </script>
+</head>
+<body>
+    <div class="wrap">
+        <main class="content">
+            <div class="embed">
+                <iframe id="reportFrame" title="Private Report" src="" allowfullscreen="true" frameborder="0"></iframe>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+

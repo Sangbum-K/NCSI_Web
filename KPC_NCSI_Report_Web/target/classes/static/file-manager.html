@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Manager</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #4a5568;
+            --primary-dark: #2d3748;
+            --primary-light: #f7fafc;
+            --secondary: #718096;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #17a2b8;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --white: #ffffff;
+            --border: #e9ecef;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.15);
+            --radius: 8px;
+            --sidebar-bg: #2d3748;
+            --sidebar-hover: #4a5568;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #d6ebff 0%, #b3d9ff 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            background: var(--white);
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-hover);
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .logo-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .logo-subtitle {
+            font-size: 16px;
+            font-weight: 400;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background: var(--sidebar-hover);
+            color: var(--white);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Folder Tree */
+        .folder-tree {
+            margin-top: 12px;
+        }
+
+        .tree-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 16px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            font-size: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 8px;
+        }
+
+        .tree-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .tree-loading {
+            padding: 18px 16px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .tree-folder {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .tree-folder:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tree-folder.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-left: 3px solid var(--white);
+        }
+
+        .tree-folder.child {
+            padding-left: 42px;
+        }
+
+        .tree-folder.child::before {
+            content: "└";
+            position: absolute;
+            left: 26px;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: monospace;
+        }
+
+        .tree-icon {
+            margin-right: 8px;
+            width: 16px;
+        }
+
+        .tree-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tree-children {
+            margin-left: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #fafbfc;
+        }
+
+        .header {
+            background: var(--white);
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .page-subtitle {
+            color: var(--secondary);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: var(--light);
+            border-radius: var(--radius);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 600;
+        }
+
+
+        /* Toolbar */
+        .toolbar {
+            background: var(--white);
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .toolbar-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px 10px 44px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--white);
+            color: var(--dark);
+            line-height: 1.2;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary, .btn-success, .btn-secondary {
+            background: var(--white);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-primary:hover, .btn-success:hover, .btn-secondary:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            background: var(--light);
+            border-radius: var(--radius);
+            padding: 2px;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            color: var(--secondary);
+        }
+
+        .view-btn.active {
+            background: var(--white);
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* File Container */
+        .file-container {
+            flex: 1;
+            padding: 24px 32px;
+            overflow-y: auto;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Grid View */
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .file-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .file-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary);
+        }
+
+        .file-card.selected {
+            background: rgba(74, 85, 104, 0.15);
+            border: none;
+        }
+
+        .file-icon-wrapper {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .file-icon-wrapper.folder {
+            background: transparent;
+            color: var(--primary);
+        }
+
+        .file-icon-wrapper.file {
+            background: transparent;
+            color: var(--secondary);
+        }
+
+        .file-icon-wrapper.document {
+            background: transparent;
+            color: #4299e1;
+        }
+
+        .file-icon-wrapper.image {
+            background: transparent;
+            color: #48bb78;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+
+        .file-meta {
+            text-align: center;
+            font-size: 12px;
+            color: var(--secondary);
+            line-height: 1.4;
+        }
+
+        /* List View */
+        .file-list {
+            background: var(--white);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .file-list-header {
+            display: grid;
+            grid-template-columns: 1fr 120px 120px 40px;
+            gap: 16px;
+            padding: 16px 20px;
+            background: var(--light);
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--secondary);
+        }
+
+        .file-list-item {
+            display: grid;
+            grid-template-columns: 1fr 120px 120px 40px;
+            gap: 16px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            align-items: center;
+        }
+
+        .file-list-item:hover {
+            background: var(--light);
+        }
+
+        .file-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-list-item.selected {
+            background: rgba(74, 85, 104, 0.15);
+            border: none;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .file-icon-sm {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--white);
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .file-list-item:hover .file-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary);
+        }
+
+        .action-btn:hover {
+            background: var(--border);
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            z-index: 1000;
+            display: none;
+            min-width: 200px;
+            border: 1px solid var(--border);
+        }
+
+        .context-menu-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 14px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .context-menu-item:first-child {
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .context-menu-item:last-child {
+            border-radius: 0 0 var(--radius) var(--radius);
+        }
+
+        .context-menu-item:hover {
+            background: var(--light);
+        }
+
+        .context-menu-item.danger {
+            color: var(--danger);
+        }
+
+        .context-menu-item.danger:hover {
+            background: #fef2f2;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            margin: 5% auto;
+            padding: 32px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+
+        .modal-body {
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--secondary);
+        }
+
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 20px;
+            color: var(--secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                margin: 10px;
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                order: 2;
+            }
+            
+            .search-box {
+                width: 200px;
+            }
+            
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .file-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 16px;
+            }
+            
+            .file-list-header,
+            .file-list-item {
+                grid-template-columns: 1fr 80px 32px;
+                gap: 12px;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                   
+                    <div class="logo-text">
+                        <div class="logo-title">File Manager</div>
+                        <div class="logo-subtitle">NCSI Report Data</div>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="folder-tree">
+                    <div class="tree-header">
+                        <div class="nav-icon">📁</div>
+                        <span>폴더</span>
+                    </div>
+                    <div id="folderTree" class="tree-content">
+                        <div class="tree-loading">폴더 구조를 불러오는 중...</div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="page-title">홈</h1>
+                </div>
+                <div class="header-actions">
+                    <!-- 관리자 부분 제거됨 -->
+                </div>
+            </header>
+
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <span>📤</span> 업로드
+                    </button>
+                    <button class="btn btn-primary" onclick="showCreateFolderModal()">
+                        <span>📁</span> 새 폴더
+                    </button>
+                    <button class="btn btn-primary" onclick="refreshFiles()">
+                        <span>🔄</span> 새로고침
+                    </button>
+                    <input type="file" id="fileInput" multiple style="display: none;" onchange="uploadFiles()">
+                </div>
+                <div class="toolbar-right">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="searchInput" class="search-input" placeholder="파일 및 폴더 검색...">
+                    </div>
+                    <div class="view-toggle">
+                        <button class="view-btn" onclick="switchView('grid')" id="gridViewBtn">
+                            <span>⊞</span>
+                        </button>
+                        <button class="view-btn active" onclick="switchView('list')" id="listViewBtn">
+                            <span>☰</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Container -->
+            <div class="file-container">
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalFiles">0</span>
+                        <span class="stat-label">파일</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalFolders">0</span>
+                        <span class="stat-label">폴더</span>
+                    </div>
+                </div>
+
+                <div id="fileContainer" onclick="clearSelection()">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        파일 목록을 불러오는 중...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu">
+        <div class="context-menu-item" onclick="openFile()">
+            <span></span> 열기
+        </div>
+        <div class="context-menu-item" onclick="downloadSelected()">
+            <span></span> 다운로드
+        </div>
+        <div class="context-menu-item" onclick="renameFile()">
+            <span></span> 이름 바꾸기
+        </div>
+        <div class="context-menu-item danger" onclick="deleteSelected()">
+            <span></span> 삭제
+        </div>
+    </div>
+
+    <!-- Create Folder Modal -->
+    <div id="createFolderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">새 폴더 생성</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">폴더 이름</label>
+                    <input type="text" class="form-input" id="folderName" placeholder="폴더 이름을 입력하세요">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal()">취소</button>
+                <button class="btn btn-primary" onclick="createFolder()">생성</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Modal -->
+    <div id="renameModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">이름 바꾸기</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">새 이름</label>
+                    <input type="text" class="form-input" id="newFileName" placeholder="새 이름을 입력하세요">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeRenameModal()">취소</button>
+                <button class="btn btn-primary" onclick="confirmRename()">변경</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" multiple style="display: none;" onchange="uploadFiles()">
+
+    <script>
+        let currentPath = '';
+        let selectedFile = null;
+        let currentView = 'list';
+        let files = [];
+        let basePath = 'ubuntu/Data'; // 기본값
+        let searchTerm = ''; // 검색어
+
+
+        function setupContextMenu() {
+            document.addEventListener('click', function() {
+                document.getElementById('contextMenu').style.display = 'none';
+            });
+        }
+
+        async function loadFiles() {
+            try {
+                // 실제 API 호출
+                const response = await fetch(`/api/files/list?path=${encodeURIComponent(currentPath)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                files = await response.json();
+                
+                displayFiles(files);
+                updateBreadcrumb();
+                updateStats();
+            } catch (error) {
+                console.error('파일 목록 로드 실패:', error);
+                document.getElementById('fileContainer').innerHTML = 
+                    '<div class="empty-state"><div class="empty-icon">⚠️</div>파일 목록을 불러올 수 없습니다.</div>';
+            }
+        }
+
+        function updateStats() {
+            const totalFiles = files.filter(f => !f.isDirectory).length;
+            const totalFolders = files.filter(f => f.isDirectory).length;
+            
+            document.getElementById('totalFiles').textContent = totalFiles;
+            document.getElementById('totalFolders').textContent = totalFolders;
+        }
+
+        // 검색 기능
+        async function performSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchTerm = searchInput.value.trim();
+            
+            if (!searchTerm) {
+                // 검색어가 없으면 현재 폴더의 파일 목록 표시
+                loadFiles();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/files/search?q=${encodeURIComponent(searchTerm)}&path=${encodeURIComponent(currentPath)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const searchResults = await response.json();
+                displayFiles(searchResults);
+            } catch (error) {
+                console.error('검색 실패:', error);
+                document.getElementById('fileContainer').innerHTML = 
+                    '<div class="empty-state"><div class="empty-icon">⚠️</div>검색 중 오류가 발생했습니다.</div>';
+            }
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.value = '';
+            searchTerm = '';
+            loadFiles();
+        }
+
+        function displayFiles(files) {
+            const fileContainer = document.getElementById('fileContainer');
+            
+            if (files.length === 0) {
+                fileContainer.innerHTML = '<div class="loading">폴더가 비어있습니다.</div>';
+                return;
+            }
+            
+            updateStats(files);
+            
+            if (currentView === 'grid') {
+                displayGridView(files);
+            } else {
+                displayListView(files);
+            }
+        }
+
+        function displayGridView(files) {
+            const fileContainer = document.getElementById('fileContainer');
+            fileContainer.className = 'file-grid';
+            
+            let html = '';
+            files.forEach(file => {
+                const icon = file.isDirectory ? '📁' : '📄';
+                const fileClass = file.isDirectory ? 'folder' : 'file';
+                
+                html += `
+                    <div class="file-card" data-path="${file.relativePath}"
+                         onclick="selectFile(event, '${file.relativePath}', ${file.isDirectory})"
+                         ondblclick="handleDoubleClick('${file.relativePath}', ${file.isDirectory})"
+                         oncontextmenu="showContextMenu(event, '${file.relativePath}', ${file.isDirectory})">
+                        <div class="file-icon-wrapper ${fileClass}">
+                            ${icon}
+                        </div>
+                        <div class="file-name">${file.name}</div>
+                    </div>
+                `;
+            });
+            
+            fileContainer.innerHTML = html;
+        }
+
+        function displayListView(files) {
+            const fileContainer = document.getElementById('fileContainer');
+            fileContainer.className = 'file-list';
+            
+            let html = '<div class="file-list-header"><span>이름</span><span>수정일</span></div>';
+            files.forEach(file => {
+                const icon = file.isDirectory ? '📁' : '📄';
+                const date = new Date(file.lastModified).toLocaleDateString();
+                
+                html += `
+                    <div class="file-list-item" data-path="${file.relativePath}"
+                         onclick="selectFile(event, '${file.relativePath}', ${file.isDirectory})"
+                         ondblclick="handleDoubleClick('${file.relativePath}', ${file.isDirectory})"
+                         oncontextmenu="showContextMenu(event, '${file.relativePath}', ${file.isDirectory})">
+                        <span class="file-list-name">
+                            <span class="file-list-icon">${icon}</span>
+                            ${file.name}
+                        </span>
+                        <span class="file-list-date">${date}</span>
+                    </div>
+                `;
+            });
+            
+            fileContainer.innerHTML = html;
+        }
+
+        // 파일/폴더 선택 처리
+        function selectFile(event, filePath, isDirectory) {
+            // 더블클릭 이벤트가 발생하지 않도록 이벤트 전파 방지
+            event.stopPropagation();
+            
+            // 이전 선택 제거
+            document.querySelectorAll('.file-card.selected, .file-list-item.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // 현재 클릭된 요소 선택
+            const clickedElement = event.currentTarget;
+            clickedElement.classList.add('selected');
+            
+            // 선택된 파일 정보 저장
+            selectedFile = { path: filePath, isDirectory: isDirectory };
+        }
+
+        // 빈 공간 클릭 시 선택 해제
+        function clearSelection() {
+            document.querySelectorAll('.file-card.selected, .file-list-item.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            selectedFile = null;
+        }
+
+        // 더블클릭 처리
+        function handleDoubleClick(filePath, isDirectory) {
+            // 더블클릭 시에는 선택 효과를 제거하고 바로 실행
+            event.stopPropagation();
+            if (isDirectory) {
+                navigateTo(filePath);
+            } else {
+                downloadFile(filePath);
+            }
+        }
+
+        // 컨텍스트 메뉴 표시
+        function showContextMenu(event, filePath, isDirectory) {
+            event.preventDefault();
+            selectedFile = { path: filePath, isDirectory: isDirectory };
+            
+            const contextMenu = document.getElementById('contextMenu');
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = event.pageX + 'px';
+            contextMenu.style.top = event.pageY + 'px';
+        }
+
+        // 컨텍스트 메뉴 액션들
+        function openFile() {
+            if (selectedFile.isDirectory) {
+                navigateTo(selectedFile.path);
+            } else {
+                downloadFile(selectedFile.path);
+            }
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        function deleteSelected() {
+            deleteFile(selectedFile.path);
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        // 파일 삭제
+        async function deleteFile(filePath) {
+            if (!confirm('정말로 삭제하시겠습니까?')) return;
+            
+            try {
+                const response = await fetch(`/api/files/delete?filePath=${encodeURIComponent(filePath)}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(result.message);
+                    loadFiles();
+                } else {
+                    alert('삭제 실패: ' + result.error);
+                }
+            } catch (error) {
+                console.error('삭제 실패:', error);
+                alert('삭제 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 파일 다운로드
+        function downloadFile(filePath) {
+            // 파일명 추출
+            const fileName = filePath.split('/').pop() || filePath.split('\\').pop();
+            
+            // 임시 링크 생성하여 다운로드
+            const link = document.createElement('a');
+            link.href = `/api/files/download?filePath=${encodeURIComponent(filePath)}`;
+            link.download = fileName; // 파일명 지정
+            link.style.display = 'none';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 뷰 전환
+        function switchView(view) {
+            currentView = view;
+            document.getElementById('gridViewBtn').classList.toggle('active', view === 'grid');
+            document.getElementById('listViewBtn').classList.toggle('active', view === 'list');
+            displayFiles(files);
+        }
+
+        // 새 폴더 생성 모달 표시
+        function showCreateFolderModal() {
+            document.getElementById('createFolderModal').style.display = 'block';
+            document.getElementById('folderName').focus();
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById('createFolderModal').style.display = 'none';
+            document.getElementById('folderName').value = '';
+        }
+
+        // 새 폴더 생성
+        async function createFolder() {
+            const folderName = document.getElementById('folderName').value.trim();
+            if (!folderName) return;
+            
+            const folderPath = currentPath ? currentPath + '/' + folderName : folderName;
+            
+            try {
+                const response = await fetch('/api/files/create-folder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `folderPath=${encodeURIComponent(folderPath)}`
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(result.message);
+                    loadFiles();
+                    closeModal();
+                } else {
+                    alert('폴더 생성 실패: ' + result.error);
+                }
+            } catch (error) {
+                console.error('폴더 생성 실패:', error);
+                alert('폴더 생성 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 파일 업로드
+        async function uploadFiles(files = null) {
+            const fileInput = document.getElementById('fileInput');
+            const filesToUpload = files || fileInput.files;
+            
+            if (filesToUpload.length === 0) return;
+            
+            for (let file of filesToUpload) {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('folder', currentPath);
+                
+                try {
+                    const response = await fetch('/api/files/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        console.log(result.message);
+                    } else {
+                        alert('업로드 실패: ' + result.error);
+                    }
+                } catch (error) {
+                    console.error('업로드 실패:', error);
+                    alert('업로드 중 오류가 발생했습니다.');
+                }
+            }
+            
+            loadFiles();
+            fileInput.value = '';
+        }
+
+        // 드래그 앤 드롭
+        function setupDragAndDrop() {
+            const fileContainer = document.getElementById('fileContainer');
+            
+            fileContainer.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileContainer.classList.add('drag-over');
+            });
+            
+            fileContainer.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                fileContainer.classList.remove('drag-over');
+            });
+            
+            fileContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileContainer.classList.remove('drag-over');
+                uploadFiles(e.dataTransfer.files);
+            });
+        }
+
+        // 컨텍스트 메뉴 설정
+        function setupContextMenu() {
+            document.addEventListener('click', function() {
+                document.getElementById('contextMenu').style.display = 'none';
+            });
+        }
+
+
+        // 폴더 트리 로드
+        async function loadFolderTree() {
+            try {
+                const response = await fetch('/api/files/list?path=');
+                const allItems = await response.json();
+                const folders = allItems.filter(item => item.isDirectory);
+                
+                const treeContent = document.getElementById('folderTree');
+                if (folders.length === 0) {
+                    treeContent.innerHTML = '<div class="tree-loading">폴더가 없습니다.</div>';
+                    return;
+                }
+                
+                let html = '<div class="tree-folder active" onclick="selectTreeFolder(\'\', this)"><span class="tree-icon">📁</span><span class="tree-name">루트</span></div>';
+                
+                folders.forEach(folder => {
+                    html += `
+                        <div class="tree-folder child" onclick="selectTreeFolder('${folder.relativePath}', this)">
+                            <span class="tree-icon">📁</span>
+                            <span class="tree-name">${folder.name}</span>
+                        </div>
+                    `;
+                });
+                
+                treeContent.innerHTML = html;
+            } catch (error) {
+                console.error('폴더 트리 로드 실패:', error);
+                document.getElementById('folderTree').innerHTML = '<div class="tree-loading">폴더 로드 실패</div>';
+            }
+        }
+
+        // 트리 폴더 선택
+        function selectTreeFolder(folderPath, element) {
+            // 이전 활성 폴더 제거
+            document.querySelectorAll('.tree-folder').forEach(folder => {
+                folder.classList.remove('active');
+            });
+            
+            // 선택된 폴더 활성화
+            element.classList.add('active');
+            
+            // 메인 영역에 해당 폴더 내용 표시
+            navigateTo(folderPath);
+        }
+
+        // 베이스 경로 가져오기
+        async function loadBasePath() {
+            try {
+                const response = await fetch('/api/files/base-path');
+                const data = await response.json();
+                basePath = data.basePath;
+            } catch (error) {
+                console.error('베이스 경로 로드 실패:', error);
+                // 기본값 유지
+            }
+        }
+
+        // 제목 업데이트 함수
+        function updateBreadcrumb() {
+            if (!currentPath) {
+                // 루트 경로인 경우
+                document.querySelector('.page-title').textContent = basePath;
+            } else {
+                // 하위 경로인 경우
+                const pathParts = currentPath.split('/').filter(part => part);
+                let fullPath = basePath;
+                
+                pathParts.forEach((part) => {
+                    fullPath += '/' + part;
+                });
+                
+                document.querySelector('.page-title').textContent = fullPath;
+            }
+        }
+
+        // 기존 navigateTo 함수 수정
+        function navigateTo(path) {
+            currentPath = path;
+            loadFiles();
+            updateBreadcrumb();
+            
+            // 폴더 트리에서도 해당 폴더 활성화
+            document.querySelectorAll('.tree-folder').forEach(folder => {
+                folder.classList.remove('active');
+            });
+            
+            // 현재 경로에 해당하는 트리 폴더 찾아서 활성화
+            const targetFolder = document.querySelector(`[onclick="selectTreeFolder('${path}', this)"]`);
+            if (targetFolder) {
+                targetFolder.classList.add('active');
+            }
+        }
+
+        // 새로고침 함수 수정
+        function refreshFiles() {
+            loadFiles();
+            loadFolderTree(); // 폴더 트리도 새로고침
+        }
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadBasePath(); // 베이스 경로를 먼저 로드
+            loadFiles();
+            loadFolderTree();
+            updateBreadcrumb();
+            setupContextMenu();
+            setupDragAndDrop();
+            setupSearch();
+        });
+
+        // 검색 이벤트 리스너 설정
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', performSearch);
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Escape') {
+                    clearSearch();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

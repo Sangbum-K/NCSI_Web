@@ -15,6 +15,12 @@ public class PageController {
     public String privateReport() {
         return "forward:/private-report.html";
     }
+
+    @GetMapping("/file-manager")
+    public String fileManager() {
+        return "forward:/file-manager.html";
+    }
+
 }
 
 

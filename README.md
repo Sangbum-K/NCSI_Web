@@ -20,4 +20,4 @@ NCSI Web Pages Renewal
 ---
 
 ## 사이트 링크
-- [NCSI DB]([https://www.ncsi.or.kr/score/ncsi_score.asp](https://www.ncsi.or.kr/score/company.asp?sector=N02&industry=N0211&sYear=2016&eYear=2025))
+- [NCSI DB]([https://www.ncsi.or.kr/score/company.asp?sector=N02&industry=N0211&sYear=2016&eYear=2025)])
